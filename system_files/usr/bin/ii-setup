@@ -1,0 +1,48 @@
+#!/usr/bin/bash
+# Install or update end-4's illogical-impulse dotfiles for the current user.
+# Dependencies are already part of the image, so only the user-level steps run.
+set -euo pipefail
+
+if [[ $EUID -eq 0 ]]; then
+    echo "Run ii-setup as your normal user, not with sudo." >&2
+    exit 1
+fi
+
+# On image-based systems these groups live in /usr/lib/group, which usermod can't edit
+for group in video input; do
+    if ! grep -q "^${group}:" /etc/group; then
+        grep "^${group}:" /usr/lib/group | sudo tee -a /etc/group >/dev/null
+    fi
+done
+
+dots_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dots-hyprland"
+if [[ -d "$dots_dir/.git" ]]; then
+    git -C "$dots_dir" pull --ff-only
+else
+    git clone --depth 1 https://github.com/end-4/dots-hyprland.git "$dots_dir"
+fi
+
+(cd "$dots_dir" && ./setup install --skip-alldeps --skip-sysupdate "$@")
+
+# Add hyprzite defaults to the user's custom Hyprland config once; edits stay theirs
+custom_dir="$HOME/.config/hypr/custom"
+marker="-- hyprzite defaults"
+mkdir -p "$custom_dir"
+
+add_defaults() {
+    local file="$custom_dir/$1"
+    if ! grep -qF "$marker" "$file" 2>/dev/null; then
+        printf '\n%s (added by ii-setup, edit freely)\n%s\n' "$marker" "$2" >> "$file"
+    fi
+}
+
+if [[ -e /proc/driver/nvidia/version ]]; then
+    add_defaults env.lua 'hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+hl.env("NVD_BACKEND", "direct")'
+fi
+
+# Variable refresh rate only for fullscreen windows (games, video)
+add_defaults general.lua 'hl.config({ misc = { vrr = 2 } })'
+
+echo "Done. Log out and pick \"Hyprland\" (not the UWSM entry) on the login screen."
