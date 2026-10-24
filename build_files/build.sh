@@ -37,6 +37,31 @@ curl -fsSL --retry 3 https://api.github.com/repos/end-4/ii-package-builds/releas
     done
 createrepo_c "$II_REPO"
 
+# Hyprland requires xorg-x11-server-Xwayland(x86-64), but Bazzite ships the newer
+# terra-xorg-x11-server-Xwayland, which conflicts with Fedora's. A provides-only
+# package satisfies the requirement and keeps Bazzite's Xwayland.
+if rpm -q --quiet terra-xorg-x11-server-Xwayland && ! rpm -q --quiet --whatprovides 'xorg-x11-server-Xwayland(x86-64)'; then
+    dnf5 install -y rpm-build
+    mkdir -p /tmp/rpmbuild/SPECS
+    cat > /tmp/rpmbuild/SPECS/hyprzite-xwayland-compat.spec <<'EOF'
+Name:      hyprzite-xwayland-compat
+Version:   1
+Release:   1
+Summary:   Lets packages requiring Fedora's Xwayland use terra-xorg-x11-server-Xwayland
+License:   MIT
+Requires:  terra-xorg-x11-server-Xwayland
+Provides:  xorg-x11-server-Xwayland(x86-64)
+
+%description
+%{summary}.
+
+%files
+EOF
+    rpmbuild -bb --define "_topdir /tmp/rpmbuild" /tmp/rpmbuild/SPECS/hyprzite-xwayland-compat.spec
+    dnf5 install -y /tmp/rpmbuild/RPMS/*/hyprzite-xwayland-compat-*.rpm
+    dnf5 remove -y rpm-build
+fi
+
 # One "group|install opts|packages" line per dependency group
 python3 -c '
 import sys, tomllib
