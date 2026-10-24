@@ -48,6 +48,14 @@ for name, group in tomllib.load(open(sys.argv[1], "rb"))["groups"].items():
 ' "$DEPS_TOML" "$SKIP_PACKAGES" |
     while IFS='|' read -r group opts pkgs; do
         echo "Installing dependency group: $group"
+        # Bazzite replaces some Fedora packages with its own builds (e.g. terra-wireplumber);
+        # keep those instead of pulling in the conflicting Fedora version
+        missing=""
+        for pkg in $pkgs; do
+            rpm -q --quiet --whatprovides "$pkg" || missing="$missing $pkg"
+        done
+        pkgs="$missing"
+        [[ -z "${pkgs// /}" ]] && continue
         if [[ "$group" == "illogical-impulse" ]]; then
             opts="$opts --repofrompath=illogical-impulse,file://$II_REPO --setopt=illogical-impulse.gpgcheck=0"
         fi
