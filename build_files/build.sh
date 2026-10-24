@@ -2,6 +2,9 @@
 
 set -ouex pipefail
 
+# Ride out flaky mirrors instead of failing the whole build
+echo -e "retries=10\nfastestmirror=True" >> /etc/dnf/dnf.conf
+
 # Copy the contents of system_files/ of the git repo to /
 cp -avf "/ctx/system_files"/. /
 
