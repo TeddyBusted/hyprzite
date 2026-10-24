@@ -10,7 +10,6 @@ What's added on top of `bazzite-nvidia-open:stable`:
 - Hyprland and every dependency group from end-4's
   [Fedora dependency list](https://github.com/end-4/dots-hyprland/blob/main/sdata/dist-fedora/feddeps.toml),
   including the prebuilt `quickshell-git` and `matugen` packages
-- [sddm-astronaut-theme](https://github.com/Keyitdev/sddm-astronaut-theme) (`hyprland_kath`) on the login screen
 - uinput and ydotool set up for the dotfiles' virtual keyboard
 - `ii-setup`: installs or updates the dotfiles for your user, and adds NVIDIA and
   fullscreen-VRR defaults to `~/.config/hypr/custom/`

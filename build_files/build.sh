@@ -96,27 +96,6 @@ for copr in "${COPRS[@]}"; do
     dnf5 -y copr disable "$copr"
 done
 
-### SDDM login theme: https://github.com/Keyitdev/sddm-astronaut-theme
-SDDM_THEME_COMMIT="abb3163c724935af888ba5ea9ac0c4f22afd8048"
-SDDM_THEME_VARIANT="hyprland_kath"
-SDDM_THEME_DIR=/usr/share/sddm/themes/sddm-astronaut-theme
-
-dnf5 install -y qt6-qtsvg qt6-qtvirtualkeyboard qt6-qtmultimedia
-mkdir -p "$SDDM_THEME_DIR"
-curl -fsSL --retry 3 "https://github.com/Keyitdev/sddm-astronaut-theme/archive/${SDDM_THEME_COMMIT}.tar.gz" |
-    tar -xz --strip-components=1 -C "$SDDM_THEME_DIR"
-sed -i "s#^ConfigFile=.*#ConfigFile=Themes/${SDDM_THEME_VARIANT}.conf#" "$SDDM_THEME_DIR/metadata.desktop"
-mkdir -p /usr/share/fonts/sddm-astronaut
-cp -a "$SDDM_THEME_DIR"/Fonts/. /usr/share/fonts/sddm-astronaut/
-mkdir -p /usr/lib/sddm/sddm.conf.d
-cat > /usr/lib/sddm/sddm.conf.d/zz-hyprzite-theme.conf <<'EOF'
-[Theme]
-Current=sddm-astronaut-theme
-
-[General]
-InputMethod=qtvirtualkeyboard
-EOF
-
 ### Changes the dotfiles' setup step would otherwise make under the read-only /usr
 
 # ydotool ships only a system unit; the dotfiles run it as a user service
